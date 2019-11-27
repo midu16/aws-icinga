@@ -215,4 +215,21 @@
     group: root
     mode: '0640'
   when: ansible_virtualization_role == 'host'
+
+# copy the syslog file
+- name: Copy the overcloudrc_icinga file
+  copy:
+    src: "{{ role_path }}/files/syslog"
+    dest: /etc/logrotate.d/syslog
+    owner: root
+    group: root
+    mode: '0644'
+
+# reloading the new config of /etc/logrotate.d/syslog
+- name: reloading the new config of syslog
+  shell: |
+    logrotate -f /etc/logrotate.d/syslog
+  when: ansible_virtualization_role == 'host'
+  args:
+    executable: /bin/bash
 ##################################################################################################################################################################################

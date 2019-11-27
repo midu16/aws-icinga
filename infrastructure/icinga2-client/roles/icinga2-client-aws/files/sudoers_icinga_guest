@@ -1,0 +1,21 @@
+User_Alias      GROUPONE = icinga
+
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/bin/vim /usr/lib/systemd/system/oss-icinga2.service
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/bin/vi /usr/lib/systemd/system/oss-icinga2.service
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/bin/systemctl start oss-icinga2.service
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop oss-icinga2.service
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart oss-icinga2.service
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/bin/systemctl status oss-icinga2.service
+
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/bin/systemctl start oss-icinga2
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart oss-icinga2
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop oss-icinga2
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/bin/systemctl status oss-icinga2
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/sbin/ntpq -p -4
+GROUPONE        ALL=(ALL) NOPASSWD: /appl/icinga/plugins/libexec/h3g.sec.pl -input=/var/log/messages=/appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg -conf=/appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg -detach -pid=/appl/icinga/plugins/var/BASE_syslog_SEC.pid -debug=4 -log=/appl/icinga/plugins/var/sec.log -reopen_timeout=5
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/bin/pkill h3g.sec.pl
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/sbin/ethtool eth0
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/sbin/ethtool eth1
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/sbin/ethtool eth2
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/sbin/ethtool eth3
+GROUPONE        ALL=(ALL) NOPASSWD: /usr/sbin/ethtool eth4
