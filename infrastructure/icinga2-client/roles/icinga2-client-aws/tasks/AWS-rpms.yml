@@ -1,0 +1,16 @@
+---
+########################################################################################################################################################
+## Preinstalled Packages
+#########################################################################################################################################################
+- name: Ensure a list of pachages installed
+  yum:
+    name: "/tmp/rpm-packages/{{ packages }}"
+    state: installed
+  vars:
+# per packages
+    packages:
+    - perl-Class-Accessor-0.34-12.el7.noarch.rpm
+    - perl-Math-Calc-Units-1.07-9.el7.noarch.rpm
+    - perl-Monitoring-Plugin-0.38-1.el7.1.noarch.rpm
+    - perl-*
+

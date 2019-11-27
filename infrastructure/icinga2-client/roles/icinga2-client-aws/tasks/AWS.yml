@@ -1,0 +1,24 @@
+---
+########################################################################################################################################################
+## Preinstalled Packages
+#########################################################################################################################################################
+- name: Ensure a list of pachages installed
+  yum:
+    name: "{{ packages }}"
+    state: installed
+  vars:
+# packages that are included in the channels in AWS
+    packages:
+    - logrotate
+    - telnet
+    - nmap-ncat
+    - screen
+    - telnet
+    - tmux
+    - sysstat
+    - python-pip
+    - pexpect
+    - sysstat
+# amzn2-core
+    - perl(JSON)
+    - perl(Digest::MD5)
