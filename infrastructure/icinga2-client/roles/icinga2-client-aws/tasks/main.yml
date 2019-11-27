@@ -1,2 +1,218 @@
 ---
-# tasks file for icinga2-client-aws
+##################################################################################################################################################################################
+# tasks file for ansible-icinga2-client-aws
+#
+# Mihai I. 		- 2019 		e-mail: idumihai16@gmail.com
+##################################################################################################################################################################################
+# Uses of the setup-module only when the target host is an RHELv7
+##################################################################################################################################################################################
+# Colect the facts of the target hosts
+##################################################################################################################################################################################
+- name: Collect only facts returned by facter
+  setup:
+    gather_subset:
+      - '!all'
+      - '!any'
+      - facter
+##################################################################################################################################################################################
+# Determine the type of the host
+##################################################################################################################################################################################
+# check if the host is virtual or physical
+- name: Debug the ansible_virtualization_role
+  debug:
+    msg: This is a Virtual Host
+  when: ansible_virtualization_role == 'guest'
+  ignore_errors: yes
+
+- name: Debug the ansible_virtualization_role
+  debug:
+    msg: This is a Physical Host
+  when: ansible_virtualization_role == 'host'
+  ignore_errors: yes
+##################################################################################################################################################################################
+# AWS
+##################################################################################################################################################################################
+- name: Debug the ansible_os_family
+  debug:
+    var: "{{ ansible_facts['distribution'] }}"
+# Install the packets
+- include: AWS.yml
+- include: AWS-rpms.yml
+
+##################################################################################################################################################################################
+# Create the volumes 
+##################################################################################################################################################################################
+- name: Create a logical volume of 512m for /appl/icinga.
+  lvol:
+    vg: vg_icinga2
+    lv: lv_appl_icinga
+    size: 512m
+  when: ansible_virtualization_role == 'guest'
+
+- name: Create a logical volume of 512m for /appl/logs/icinga.
+  lvol:
+    vg: vg_icinga2
+    lv: lv_appl_logs_icinga
+    size: 512m
+  when: ansible_virtualization_role == 'guest'
+
+# Create a filesystems
+- name: "Create a ext4 filesystems"
+  filesystem:
+        force: no
+        fstype: ext4
+        dev: "{{ item }}"
+  when: ansible_virtualization_role == 'guest'
+  with_items:
+    - "/dev/vg_icinga2/lv_appl_icinga"
+    - "/dev/vg_icinga2/lv_appl_logs_icinga"
+
+##################################################################################################################################################################################
+# Mount the volumes 
+##################################################################################################################################################################################
+- name: /appl/icinga/ mountpoint
+  mount:
+    path: /appl/icinga
+    src:  /dev/vg_icinga2/lv_appl_icinga
+    fstype: ext4
+    opts: defaults #MountOptions
+    state: mounted
+  when: ansible_virtualization_role == 'guest'
+
+- name: /appl/logs/icinga/ mountpoint
+  mount:
+    path: /appl/logs/icinga
+    src:  /dev/vg_icinga2/lv_appl_logs_icinga
+    fstype: ext4
+    opts: defaults #MountOptions
+    state: mounted
+  when: ansible_virtualization_role == 'guest'
+##################################################################################################################################################################################
+# Changing the permisions of the mountpoints
+##################################################################################################################################################################################
+- name: Change the permissions of the mountpoints
+  file:
+    path: "{{ item }}"
+    owner: "icinga"
+    group: "icinga"
+    mode: '0750'
+  when: ansible_virtualization_role == 'guest'
+  with_items:
+    - "/appl/icinga/"
+    - "/appl/logs/icinga/"
+
+##################################################################################################################################################################################
+# create groups before user
+# Create the user groups 
+##################################################################################################################################################################################
+- name: Create the icinga group 
+  group:
+    name: icinga
+    gid: '8248'
+    state: present
+
+- name: Create the icingacmd group
+  group:
+    name: icingacmd
+    gid: '8249'
+    state: present
+
+- name: Create the nobody group
+  group:
+    name: nobody
+    gid: '60001'
+    state: present
+
+# Create the icinga user
+- name: Create icinga user
+  user:
+    name: icinga
+    password: "{{ vault_icinga2_password | password_hash('sha512') }}"
+    groups: #
+     - icinga
+     - icingacmd
+     - nobody
+    state: present
+    shell: /bin/bash
+    system: yes
+    comment: OSS Icinga user
+    createhome: yes
+    home: /appl/home/icinga
+    uid: '8232'
+  register: icingauser
+
+# Generate random password for icinga
+# cat /etc/shadow | grep icinga
+#- name: generate random password for icinga user on creation
+#  shell: /usr/bin/openssl rand -base64 32 | passwd --stdin icinga
+#  when: icingauser.changed
+
+##################################################################################################################################################################################
+# chown icinga:icinga /appl/icinga
+- name: Change owner modification directories
+  file:
+    path: "{{ item }}"
+    owner: "icinga"
+    group: "icinga"
+    mode: "0750"
+    state: directory
+  with_items:
+    - "/appl/icinga"
+    - "/appl/logs/icinga"
+
+- name: Create cron.allow file if not present
+  file: 
+    path: /etc/cron.allow
+    owner: "root"
+    group: "root"
+    state: touch
+    
+# Enable crontab for user icinga
+# # echo "icinga" >> /etc/cron.allow
+- name: Enable crontab for user icinga
+  lineinfile:
+    path: "/etc/cron.allow"
+    line: "icinga"
+
+#set user limits in /etc/security/limits.config
+#<domain>      <type>  <item>         <value>
+# icinga         -      nofile         16384
+- name: set the user limits in /etc/security/limits.conf
+  lineinfile: 
+    path: /etc/security/limits.conf
+    line: 'icinga         -      nofile         16384'
+
+#set user limits in /etc/security/limits.config
+#<domain>      <type>  <item>         <value>
+# icinga         -      nproc          16384
+- name: set the user limits in /etc/security/limits.conf
+  lineinfile: 
+    path: /etc/security/limits.conf
+    line: 'icinga         -      nproc          16384'
+
+##################################################################################################################################################################################
+# sudo permissions
+# sudo permisions are defined in the ../60_icinga and this will be copy to the ansible-target host to the address /etc/sudoers.d/60_icinga
+##################################################################################################################################################################################
+# move to the last part
+# systemctl daemon-reload
+#- name: just force systemd to reread configs
+#  systemd: daemon_reload=yes
+- name: Sudo permisions for the user icinga on virtual hosts
+  copy:
+    src: "{{ role_path }}/files/sudoers_icinga_guest"
+    dest: /etc/sudoers.d/60_icinga
+    owner: root
+    group: root
+    mode: '0640'
+  when: ansible_virtualization_role == 'guest'
+
+- name: Sudo permisions for the user icinga on physical hosts
+  copy:
+    src: "{{ role_path }}/files/sudoers_icinga_host"
+    dest: /etc/sudoers.d/60_icinga
+    owner: root
+    group: root
+    mode: '0640'
+  when: ansible_virtualization_role == 'host'
+##################################################################################################################################################################################
