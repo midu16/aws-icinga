@@ -232,4 +232,22 @@
   when: ansible_virtualization_role == 'host'
   args:
     executable: /bin/bash
+
+##################################################################################################################################################################################
+# copy the plugins for BASIC monitoring
+##################################################################################################################################################################################
+- name: Copy the plugins file
+  copy:
+    src: "{{ role_path }}/files/plugins"
+    dest: /appl/icinga
+    owner: icinga
+    group: icinga
+    mode: '0640'
+
+
+- name: execution permisions on file h3g.sec.pl
+  shell: |
+    chmod u+x /appl/icinga/plugins/libexec/h3g.sec.pl
+  args:
+    executable: /bin/bash
 ##################################################################################################################################################################################

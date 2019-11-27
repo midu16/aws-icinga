@@ -1,0 +1,13 @@
+Fri Oct 18 13:44:51 2019: ------> START NEW POLLING <--------
+Fri Oct 18 13:44:51 2019: Used PS: ps wwaux for Linux
+Fri Oct 18 13:44:51 2019: Nagios service name: BASE_syslog
+Fri Oct 18 13:44:51 2019: Got correct logfile/cfgfile parameter:  /var/log/messages,BASE_Syslog_Linux.cfg
+Fri Oct 18 13:44:51 2019: Cfgfile_name: /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Fri Oct 18 13:44:51 2019: Outfile_name: /appl/icinga/plugins/var/BASE_Syslog_Linux.log
+Fri Oct 18 13:44:51 2019: Context_name: /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Fri Oct 18 13:44:51 2019: LOGFILE(s):   /var/log/messages
+Fri Oct 18 13:44:51 2019: ----------------------------------------
+Fri Oct 18 13:44:51 2019: Logifle: /var/log/messages uses cfg file: /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Fri Oct 18 13:44:51 2019: SEC RESTARTED!! Nagios args have been changed or starting the first time
+Fri Oct 18 13:44:51 2019: Killed 9314
+Fri Oct 18 13:44:51 2019: SEC outputfile is smaller then 15300 bytes -> Not needed to create buffer file

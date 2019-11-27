@@ -1,0 +1,78 @@
+Thu Oct 17 17:00:59 2019: SEC (Simple Event Correlator) 2.4.1
+Thu Oct 17 17:00:59 2019: Changing working directory to /
+Thu Oct 17 17:00:59 2019: Reading configuration from /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Thu Oct 17 17:01:42 2019: SIGTERM received: shutting down SEC
+Thu Oct 17 17:02:34 2019: SEC (Simple Event Correlator) 2.4.1
+Thu Oct 17 17:02:34 2019: Changing working directory to /
+Thu Oct 17 17:02:34 2019: Reading configuration from /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Thu Oct 17 17:06:58 2019: SIGTERM received: shutting down SEC
+Thu Oct 17 17:07:00 2019: SEC (Simple Event Correlator) 2.4.1
+Thu Oct 17 17:07:00 2019: Changing working directory to /
+Thu Oct 17 17:07:00 2019: Reading configuration from /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Thu Oct 17 17:07:03 2019: SIGTERM received: shutting down SEC
+Thu Oct 17 17:07:05 2019: SEC (Simple Event Correlator) 2.4.1
+Thu Oct 17 17:07:05 2019: Changing working directory to /
+Thu Oct 17 17:07:05 2019: Reading configuration from /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Fri Oct 18 10:52:21 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 10:52:29 2019: SEC (Simple Event Correlator) 2.4.1
+Fri Oct 18 10:52:29 2019: Changing working directory to /
+Fri Oct 18 10:52:29 2019: Reading configuration from /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Fri Oct 18 11:19:34 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 11:19:52 2019: SEC (Simple Event Correlator) 2.4.1
+Fri Oct 18 11:19:52 2019: Changing working directory to /
+Fri Oct 18 11:19:52 2019: Reading configuration from /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Fri Oct 18 11:33:12 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 11:33:12 2019: SEC (Simple Event Correlator) 2.4.1
+Fri Oct 18 11:33:12 2019: Changing working directory to /
+Fri Oct 18 11:33:12 2019: Reading configuration from /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Fri Oct 18 11:34:19 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 11:34:19 2019: SEC (Simple Event Correlator) 2.4.1
+Fri Oct 18 11:34:19 2019: Changing working directory to /
+Fri Oct 18 11:34:19 2019: Reading configuration from /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Fri Oct 18 11:35:56 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 11:35:56 2019: SEC (Simple Event Correlator) 2.4.1
+Fri Oct 18 11:35:56 2019: Changing working directory to /
+Fri Oct 18 11:35:56 2019: Reading configuration from /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Fri Oct 18 11:36:25 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 11:36:25 2019: SEC (Simple Event Correlator) 2.4.1
+Fri Oct 18 11:36:25 2019: Changing working directory to /
+Fri Oct 18 11:36:25 2019: Reading configuration from /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Fri Oct 18 11:37:28 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 11:37:33 2019: SEC (Simple Event Correlator) 2.4.1
+Fri Oct 18 11:37:33 2019: Changing working directory to /
+Fri Oct 18 11:37:33 2019: Reading configuration from /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Fri Oct 18 11:37:50 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 11:37:50 2019: SEC (Simple Event Correlator) 2.4.1
+Fri Oct 18 11:37:50 2019: Changing working directory to /
+Fri Oct 18 11:37:50 2019: Reading configuration from /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Fri Oct 18 11:42:32 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 11:42:32 2019: SEC (Simple Event Correlator) 2.4.1
+Fri Oct 18 11:42:32 2019: Changing working directory to /
+Fri Oct 18 11:42:32 2019: Reading configuration from /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Fri Oct 18 11:43:31 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 11:44:02 2019: SEC (Simple Event Correlator) 2.4.1
+Fri Oct 18 11:44:02 2019: Changing working directory to /
+Fri Oct 18 11:44:02 2019: Reading configuration from /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Fri Oct 18 11:47:04 2019: Reading configuration from /appl/icinga/plugins/etc/BASE_Syslog_Linux.cfg
+Fri Oct 18 11:47:14 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 11:47:14 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 11:48:56 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 11:49:01 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 11:49:20 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 11:51:02 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 12:03:05 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 12:10:41 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 12:11:38 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 12:12:52 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 13:34:42 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 13:44:51 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 13:46:48 2019: SIGTERM received: shutting down SEC
+Fri Oct 18 13:47:05 2019: SIGTERM received: shutting down SEC
+Sun Oct 20 03:09:01 2019: Input file /var/log/messages has been recreated
+Sun Oct 20 03:09:01 2019: Shuffled /var/log/messages, reopening and processing from the start
+Sun Oct 27 03:09:04 2019: Input file /var/log/messages has been recreated
+Sun Oct 27 03:09:04 2019: Shuffled /var/log/messages, reopening and processing from the start
+Sun Nov  3 03:39:02 2019: Input file /var/log/messages has been recreated
+Sun Nov  3 03:39:02 2019: Shuffled /var/log/messages, reopening and processing from the start
+Sun Nov 10 03:40:01 2019: Input file /var/log/messages has been recreated
+Sun Nov 10 03:40:01 2019: Shuffled /var/log/messages, reopening and processing from the start
