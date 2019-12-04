@@ -20,5 +20,4 @@
     - pexpect
     - sysstat
 # amzn2-core
-    - perl(JSON)
-    - perl(Digest::MD5)
+

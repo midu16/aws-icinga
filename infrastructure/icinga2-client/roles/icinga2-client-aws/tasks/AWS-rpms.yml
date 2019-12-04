@@ -9,8 +9,20 @@
   vars:
 # per packages
     packages:
-    - perl-Class-Accessor-0.34-12.el7.noarch.rpm
-    - perl-Math-Calc-Units-1.07-9.el7.noarch.rpm
-    - perl-Monitoring-Plugin-0.38-1.el7.1.noarch.rpm
-    - perl-*
-
+    - python36
+    - python36-asn1crypto
+    - python36-pycryptodomex
+    - python36-pysocks
+    - python36-slacker                             
+    - python36-setuptools                                    
+    - python36-urllib3                              
+    - python36-jsmva                              
+    - python36-nose
+    - python3-pip
+    - perl
+    - nagios-plugins-all
+    - nagios-plugins-uptime        
+    - perl(JSON)
+    - perl(Digest::MD5)
+    - perl(Config::IniFiles)
+    - perl(Sys::Statistics::Linux)
