@@ -9,15 +9,19 @@
   vars:
 # packages that are included in the channels in AWS
     packages:
+    - createrepo
     - logrotate
     - telnet
     - nmap-ncat
     - screen
-    - telnet
     - tmux
     - sysstat
     - python-pip
     - pexpect
-    - sysstat
+    - perl
+    - perl(JSON)
+    - perl(Digest::MD5)
+    - perl(Config::IniFiles)
+    - perl(Sys::Statistics::Linux)
 # amzn2-core
 
