@@ -48,7 +48,45 @@
 - name: Debug the ansible_os_family
   debug:
     var: "{{ ansible_facts['distribution'] }}"
-# Install the packets
+
+# create the rpm directory on the /home/ec2-user/rpm/
+- name: Create the /home/ec2-user/rpm/
+  file:
+    path: /home/ec2-user/rpm
+    state: directory
+
+# copy the rpm
+- name: Copy the rpm directory to the rpm target host
+  copy:
+    src: "{{ role_path }}/files/rpm"
+    dest: /home/ec2-user/rpm
+    owner: ec2-user
+    group: ec2-user
+    mode: '0640'
+
+# install the createrepo packet
+- name: Install the createrepo
+  yum:
+    name: createrepo
+    state: installed
+
+# createrepo /home/ec2-user/rpm/
+- name: Create local repo /home/ec2-user/rpm/
+  shell: |
+    createrepo /home/ec2-user/rpm/
+  args:
+    executable: /bin/bash
+
+# copy the icinga2-client.repo
+- name: Copy the icinga2-client.repo file to the target host
+  copy:
+    src: "{{ role_path }}/files/icinga2-client.repo"
+    dest: /etc/yum.repos.d/icinga2-client.repo
+    owner: root
+    group: root
+    mode: '0640'
+
+# include the AWS-rpms.yml to install the local.repo packets
 - include: AWS-rpms.yml
 
 ##################################################################################################################################################################################
@@ -255,7 +293,6 @@
     owner: icinga
     group: icinga
     mode: '0640'
-
 
 - name: execution permisions on file h3g.sec.pl
   shell: |
