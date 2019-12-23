@@ -1,2 +1,428 @@
 ---
 # tasks file for icinga2-client-aws
+##################################################################################################################################################################################
+# tasks file for icinga2-client-h3a-configure
+#
+# Mihai I.      - 2019 		e-mail: mihai.idu@drei.com
+#
+##################################################################################################################################################################################
+- name: Setting the dev facts
+  set_fact:
+    icinga2_username: "{{ icinga2_username_test }}"
+    icinga2_password: "{{ icinga2_password_test }}"
+  when: icinga_environment == "dev"
+- name: Setting the prod facts
+  set_fact:
+    icinga2_username: "{{ icinga2_username_prod }}"
+    icinga2_password: "{{ icinga2_password_prod }}"
+  when: icinga_environment == "prod"
+##################################################################################################################################################################################
+# install the binaries
+##################################################################################################################################################################################
+- name: Ensure packages install the icinga2-bin.x86_64, icinga2-common.x86_64 and nagios-plugins-all.x86_64
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - icinga2-bin-2.10.5
+    - icinga2-common-2.10.5
+#    - nagios-plugins-all
+##################################################################################################################################################################################
+## Determine the type of the host
+###################################################################################################################################################################################
+- name: Debug the ansible_virtualization_role
+  debug:
+    msg: This is a Virtual Host
+  when: ansible_virtualization_role == 'guest'
+  ignore_errors: yes
+
+- name: Debug the ansible_virtualization_role
+  debug:
+    msg: This is a Physical Host
+  when: ansible_virtualization_role == 'host'
+  ignore_errors: yes
+##################################################################################################################################################################################
+# git clone ssh://git@bitbucket.three.com:7999/icinga/linux_client_rollout_automation.git on ansible host
+##################################################################################################################################################################################
+- name: Remove the /appl/ansible/icinga2/linux_client_rollout_automation.{{ inventory_hostname }}/
+  delegate_to: 127.0.0.1
+  file:
+    path: "/appl/ansible/icinga2/linux_client_rollout_automation.{{ inventory_hostname }}/"
+    state: absent
+- name: Creates directory "/appl/ansible/icinga2/linux_client_rollout_automation.{{ inventory_hostname }}/" 
+  delegate_to: 127.0.0.1
+  file:
+    path: "/appl/ansible/icinga2/"
+    state: directory
+    owner: ansible
+    group: ansible
+    mode: '0775'
+    recurse: yes
+# git issue https://github.com/ansible/ansible/issues/33947 /tmp cannot be mounted with noexec
+# - name: Git clone linux_client_rollout_automation
+#   delegate_to: 127.0.0.1
+#   git:
+#     accept_hostkey: yes
+#     repo: ssh://git@bitbucket.three.com:7999/icinga/linux_client_rollout_automation.git
+#     dest: /appl/ansible/icinga2/linux_client_rollout_automation.{{ inventory_hostname }}/
+#     force: yes
+#     bare: yes
+#     # depth: 1 TODO: git version on ansible1 is too old for this
+- name: Clone the latest version of the bitbucket repo'
+  delegate_to: 127.0.0.1
+  shell: |
+    git clone ssh://git@bitbucket.three.com:7999/icinga/linux_client_rollout_automation.git /appl/ansible/icinga2/linux_client_rollout_automation.{{ inventory_hostname }}
+  args:
+    executable: /bin/bash
+    chdir: "/appl/ansible/icinga2/"
+- name: Change the ownership of the repository
+  delegate_to: 127.0.0.1
+  file:
+    path: "/appl/ansible/icinga2/linux_client_rollout_automation.{{ inventory_hostname }}"
+    owner: ansible
+    group: ansible
+    mode: '0775'
+    recurse: yes
+    state: "directory"
+
+##################################################################################################################################################################################
+# Copy / unpack files from the ansible host to target host
+##################################################################################################################################################################################
+# gtar cannot handle the archive
+# - name: Extract the basic structure oss_icinga_home.tgz and oss_icinga_baseconfig.tgz
+#   unarchive:
+#     src: "{{ item }}"
+#     dest: /tmp
+#     keep_newer: yes
+#     extra_opts:
+#       - -f
+#   with_items:
+#     - "/appl/ansible/icinga2/linux_client_rollout_automation.{{ inventory_hostname }}/oss_icinga_home.tgz"
+#     - "/appl/ansible/icinga2/linux_client_rollout_automation.{{ inventory_hostname }}/oss_icinga_baseconfig.tgz"
+- name: Copy the repository .tgz files to the target host
+  copy:
+    src: "{{ item }}"
+    dest: /tmp/
+    owner: root
+    group: root
+    mode: '0640'
+    force: yes
+  with_items:
+    - "/appl/ansible/icinga2/linux_client_rollout_automation.{{ inventory_hostname }}/oss_icinga_home.tgz"
+    - "/appl/ansible/icinga2/linux_client_rollout_automation.{{ inventory_hostname }}/oss_icinga_baseconfig.tgz"
+- name: Run the command wich will extract the basic structure oss_icinga_home.tgz and oss_icinga_baseconfig.tgz
+  shell: |
+      cd /
+      tar -xf /tmp/oss_icinga_home.tgz
+      tar -xf /tmp/oss_icinga_baseconfig.tgz
+      chown icinga:icinga /appl/home/icinga/.ssh/
+- name: Set .ssh icinga user permissions
+  file:
+    path: "/appl/home/icinga/.ssh/"
+    state: directory
+    owner: icinga
+    group: icinga
+- name: Creates directory /appl/icinga/icinga2/etc/icinga2 with icinga:icinga rights
+  file:
+    path: "/appl/icinga/icinga2/etc/icinga2"
+    state: directory
+    owner: icinga
+    group: icinga
+    mode: '0775'
+    recurse: yes
+
+##################################################################################################################################################################################
+# Remove local /appl/ansible/icinga2/
+##################################################################################################################################################################################
+- name: Remove the /appl/ansible/icinga2/linux_client_rollout_automation.{{ inventory_hostname }}/
+  delegate_to: 127.0.0.1
+  file:
+    path: "/appl/ansible/icinga2/linux_client_rollout_automation.{{ inventory_hostname }}/"
+    state: absent
+
+##################################################################################################################################################################################
+# Determine the icinga2 zone. Check the table on the OSS.
+# Note that the Test Environment is used ONLY for development. The actual monitoring will be performed using 
+#dedicated test satellites from production icinga2.
+#
+# |Env | Satellite | Zone | VLAN | Hostname | IP Address |
+# |    |           |      |      |          |            |
+# |    |           |      |      |          |            |
+#setup client on master using the REST-API
+##################################################################################################################################################################################
+- name: Copy the bash script for zone discovery
+  copy:
+     src: "{{ role_path }}/files/zone-discovery.sh"
+     dest: /tmp/zone-discovery.sh
+     owner: root
+     group: root
+     mode: '0640'
+# - name: Executing script for {{ icinga_environment }} icinga_environment for zone
+#   shell: >
+#     sh /tmp/zone-discovery.sh {{ icinga_environment }}
+#   register: zone_discovery
+# - name: Setting zone relevant variables
+#   set_fact:
+#     icinga2_satellite: "{{ (zone_discovery.stdout | regex_findall('satellite1: ([^\\s]+)'))[0] }}"
+#     icinga2_satellite_zone: "{{ (zone_discovery.stdout | regex_findall('zone: ([^\\s]+)'))[0] }}"
+#     icinga2_satellite_1: "{{ (zone_discovery.stdout | regex_findall('satellite2: ([^\\s]+)')) }}"
+- name: Executes the scripts for {{ icinga_environment }} environment for zone
+  shell: >
+    sh /tmp/zone-discovery.sh {{ icinga_environment }} | awk -F'[ :]+'  '/zone: /{print $3}';
+  args:
+    executable: /bin/bash
+  register: disc_zone_out
+- name: Executes the zone-discovery script {{ icinga_environment }} environment for satellite1
+  shell: >
+    sh /tmp/zone-discovery.sh {{ icinga_environment }} | awk -F'[ :]+'  '/satellite1: /{print $6}';
+  args:
+    executable: /bin/bash
+  register: disc_sat1_out
+- name: Executes the zone-discovery script {{ icinga_environment }} environment for satellite2
+  shell: >
+    sh /tmp/zone-discovery.sh {{ icinga_environment }} | awk -F'[ :]+'  '/satellite2: /{print $9}';
+  args:
+    executable: /bin/bash
+  register: disc_sat2_out
+# Set in defaults/main.yml
+# - name: Setting icinga2 zone facts
+#   set_fact:
+#     icinga2_satellite_zone: "{{ disc_zone_out.stdout_lines[0] }}"
+#     icinga2_satellite: "{{ disc_sat1_out.stdout_lines[0] }}"
+#     icinga2_satellite_1: "{{ disc_sat2_out.stdout_lines[0] }}"
+- name: One icinga2 endpoint found
+  set_fact:
+    icinga2_endpoints: [ "{{ icinga2_satellite }}" ]
+  # when: icinga2_satellite_1 is undefined # FIXME it should detect if there is one or more
+# - name: Two icinga2 endpoints found
+  # set_fact:
+    # icinga2_endpoints: [ "{{ icinga2_satellite }}", "{{ icinga2_satellite_1 }}" ]
+  # when:  icinga2_satellite_1 is defined
+- name: Create icinga zones.conf
+  template:
+    src: "{{ role_path }}/templates/zones.conf.j2"
+    dest: "/appl/icinga/icinga2/etc/icinga2/zones.conf"
+    owner: "icinga"
+    group: "icinga"
+    mode: "0640"
+
+##################################################################################################################################################################################
+# API CALLs
+#Check if the icinga2_client it has been defined into the icinga2_master previously
+##################################################################################################################################################################################
+- name: Set hostname for {{ icinga_environment }} satellite API calls
+  set_fact:
+    icinga_master_host: "icinga2-test.it.internal"
+  when: icinga_environment == "dev" and icinga_master_host is undefined
+- name: Set hostname for {{ icinga_environment }} satellite API calls
+  set_fact:
+    icinga_master_host: "monitoring.it.internal"
+  when: icinga_environment == "prod" and icinga_master_host is undefined
+- name: Checking icinga_hostname variable
+  fail:
+    msg: "icinga_environment not set to known dev|prod variable"
+  when: icinga_master_host is undefined
+- name: Check if the '{{ icinga2_client }}' has been defined 
+  delegate_to: 127.0.0.1
+  uri:
+    url: https://{{ icinga_master_host }}/icingaweb2/director/host?name={{ icinga2_client }}
+    headers:
+       Accept: "application/json"
+    user: "{{ icinga2_username }}"
+    password: "{{ icinga2_password }}"
+    method: GET
+    force_basic_auth: yes
+    use_proxy: no
+    http_agent: curl/7.29.0
+    follow_redirects: safe
+    status_code: 200, 404
+    body_format: json
+    return_content: yes
+    force: yes
+  register: icinga2_answer
+  changed_when: False
+- name: Call the POST-Profile command of the icinga2-master-API
+  delegate_to: 127.0.0.1
+  uri:
+    url: https://{{ icinga_master_host }}/icingaweb2/director/host
+    headers:
+       Accept: "application/json"   
+    user: "{{ icinga2_username }}"
+    password: "{{ icinga2_password }}"
+    method: POST
+    body_format: json
+    body:
+      accept_config: true
+      address: "{{ icinga2_client_address }}"
+      display_name: "{{ icinga2_client }}"
+      has_agent: true
+      master_should_connect: true
+      imports: [iHSS_AP_template]
+      object_name: "{{ icinga2_client }}"
+      object_type: object
+      zone: "{{ icinga2_satellite_zone }}"
+    force_basic_auth: yes
+    use_proxy: no
+    retries: 1
+    delay: 0
+    http_agent: curl/7.29.0
+    follow_redirects: safe
+    status_code: 201, 422
+  when: ansible_virtualization_role == 'guest'
+
+- name: Call the POST-Profile command of the icinga2-master-API
+  delegate_to: 127.0.0.1
+  uri:
+    url: https://{{ icinga_master_host }}/icingaweb2/director/host
+    headers:
+       Accept: "application/json"
+    user: "{{ icinga2_username }}"
+    password: "{{ icinga2_password }}"
+    method: POST
+    body_format: json
+    body:
+      accept_config: true
+      address: "{{ icinga2_client_address }}"
+      display_name: "{{ icinga2_client }}"
+      has_agent: true
+      master_should_connect: true
+      imports: [iHSS_OS_template]
+      object_name: "{{ icinga2_client }}"
+      object_type: object
+      zone: "{{ icinga2_satellite_zone }}"
+    force_basic_auth: yes
+    use_proxy: no
+    retries: 1
+    delay: 0
+    http_agent: curl/7.29.0
+    follow_redirects: safe
+    status_code: 201, 422
+  when: ansible_virtualization_role == 'host'
+
+- name: Call the GET-Ticket command of the icinga2-master-API
+  delegate_to: 127.0.0.1
+  uri:
+    url: https://{{ icinga_master_host }}/icingaweb2/director/host/ticket?name={{ icinga2_client }}
+    headers:
+       Accept: "application/json"
+    user: "{{ icinga2_username }}"
+    password: "{{ icinga2_password }}"
+    method: GET
+    force_basic_auth: yes
+    use_proxy: no
+    http_agent: curl/7.29.0
+    follow_redirects: safe
+    status_code: 200
+    body_format: json
+    return_content: yes
+    force: yes
+  register: key
+
+- name: Debug the GET answer variable
+  debug:
+     var: icinga2_client_tokenID.json
+
+- name: Call the POST-Deploy command of the icinga2-master-API
+  delegate_to: 127.0.0.1
+  uri:
+    url: https://{{ icinga_master_host }}/icingaweb2/director/config/deploy
+    headers:
+       Accept: "application/json"
+    user: "{{ icinga2_username }}"
+    password: "{{ icinga2_password }}"
+    method: POST
+    body_format: json
+    force_basic_auth: yes
+    use_proxy: no
+    retries: 1
+    delay: 0
+    http_agent: curl/7.29.0
+    follow_redirects: safe
+    status_code: 200, 201, 422
+  ignore_errors: yes
+
+##################################################################################################################################################################################
+# Creating the icinga certificates
+##################################################################################################################################################################################
+- name: Remove certs directory /appl/icinga/icinga2/var/data/certs/
+  file:
+    path: /appl/icinga/icinga2/var/data/certs/
+    state: absent
+  when: refresh_certs == true
+- name: Creates directory /appl/icinga/icinga2/var/data/certs/ with icinga:icinga rights
+  file:
+    path: /appl/icinga/icinga2/var/data/certs/
+    state: directory
+    owner: icinga
+    group: icinga
+    mode: '0775'
+    recurse: yes
+- name: Generate new local certificates
+  shell: >
+    source /appl/home/icinga/.bashrc; 
+    icinga2 pki new-cert --cn {{icinga2_client}} 
+    --cert /appl/icinga/icinga2/var/data/certs/{{icinga2_client}}.crt
+    --csr  /appl/icinga/icinga2/var/data/certs/{{icinga2_client}}.csr
+    --key /appl/icinga/icinga2/var/data/certs/{{icinga2_client}}.key
+  args:
+    creates: /appl/icinga/icinga2/var/data/certs/{{icinga2_client}}.key
+    executable: /bin/bash
+- name: Request the master certificate from the master host {{ icinga2_server }} and store it as trusted-master.crt. Review it and continue
+  shell: >
+    source  /appl/home/icinga/.bashrc;
+    icinga2 pki save-cert 
+    --host {{icinga2_satellite}}
+    --port {{icinga2_server_port}}
+    --key /appl/icinga/icinga2/var/data/certs/{{icinga2_client}}.key
+    --trustedcert /appl/icinga/icinga2/var/data/certs/trusted-master.crt
+  args:
+    creates: /appl/icinga/icinga2/var/data/certs/trusted-master.crt
+    executable: /bin/bash
+- name: Request the master certificate .. 
+  shell: >
+    source /appl/home/icinga/.bashrc;
+    icinga2 pki request 
+    --host {{ icinga2_satellite }}
+    --port {{ icinga2_server_port }}
+    --ticket {{ icinga2_client_tokenID.json }}
+    --key /appl/icinga/icinga2/var/data/certs/{{ icinga2_client }}.key
+    --cert /appl/icinga/icinga2/var/data/certs/{{ icinga2_client }}.crt
+    --trustedcert /appl/icinga/icinga2/var/data/certs/trusted-master.crt
+    --ca /appl/icinga/icinga2/var/data/certs/ca.crt
+  args:
+    creates: /appl/icinga/icinga2/var/data/certs/ca.crt
+    executable: /bin/bash
+
+##################################################################################################################################################################################
+## Check trusted connection to icinga2-master
+##################################################################################################################################################################################
+- name: Verify trusted connection to icinga2-master
+  shell: >
+    curl 
+    --cacert /appl/icinga/icinga2/var/data/certs/ca.crt
+    -u "{{icinga2_username}}:{{icinga2_password}}" 'https://{{ icinga_master_host }}:5665/v1/'
+  args:
+    executable: /bin/bash
+
+##################################################################################################################################################################################
+# Re-deploy a new set of certificates
+#################################################################################################################################################################################
+- name: Re-deploy a new set of certificats
+  shell: >
+    curl -H 'Accept:application/json' -X POST 'https://{{ icinga_master_host }}:5665/v1/actions/generate-ticket?pretty=1'
+    -d '{ "cn": "{{ icinga2_client }}" }'
+  args:
+    creates: /appl/icinga/icinga2/var/data/certs/ca.crt
+    executable: /bin/bash
+  when: refresh_certs == true  
+
+##################################################################################################################################################################################
+# Starting / Enabling oss-icinga2 service
+##################################################################################################################################################################################
+- name: enable oss-icinga2 service and ensure it is not masked
+  systemd:
+    name: oss-icinga2
+    state: restarted
+    daemon_reload: yes
+    force: yes
+    enabled: yes
