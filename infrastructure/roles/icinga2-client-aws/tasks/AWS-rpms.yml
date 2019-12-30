@@ -4,7 +4,7 @@
 #########################################################################################################################################################
 - name: Ensure a list of pachages installed
   yum:
-    name: "/tmp/rpm-packages/{{ packages }}"
+    name: "{{ packages }}"
     state: installed
   vars:
 # per packages

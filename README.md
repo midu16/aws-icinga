@@ -34,6 +34,12 @@ The service directory contains the ansible-playbook for the following points:
 	
 		- Regenerates the icinga2-client <-> icinga2-satellite certificates
 
+## Configuration workflow
+
+It first creates on an specific VM which will share the subnet with the the rest of the VMs or the access to this one is known by the rest of the AWS VMs which will suppose to have the icinga2-client installed. This VM will be called, from now on, the icinga2-repo-server VM. This VM will be the only point of access to the local rpm's by the rest of the AWS VMs. 
+
+Taking this choise it will facilitate also the process of updating the icinga2-client VMs. Instead of distributing the localhost rpm's those are centralized. Another advantage it will be the deployment time, because the localhost rpm's will be copied to the target host only once, for the icinga2-repo-server, not for N AWS VMs.
+
 
 
 ## Building the on-premises infrastructure

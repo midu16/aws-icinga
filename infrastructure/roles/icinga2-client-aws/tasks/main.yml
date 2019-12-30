@@ -49,33 +49,8 @@
   debug:
     var: "{{ ansible_facts['distribution'] }}"
 
-# create the rpm directory on the /home/ec2-user/rpm/
-- name: Create the /home/ec2-user/rpm/
-  file:
-    path: /home/ec2-user/rpm
-    state: directory
-
-# copy the rpm
-- name: Copy the rpm directory to the rpm target host
-  copy:
-    src: "{{ role_path }}/files/rpm"
-    dest: /home/ec2-user/rpm
-    owner: ec2-user
-    group: ec2-user
-    mode: '0640'
-
-# install the createrepo packet
-- name: Install the createrepo
-  yum:
-    name: createrepo
-    state: installed
-
-# createrepo /home/ec2-user/rpm/
-- name: Create local repo /home/ec2-user/rpm/
-  shell: |
-    createrepo /home/ec2-user/rpm/
-  args:
-    executable: /bin/bash
+# Configuring the icinga2-repo-server-config AWS VM
+- include: icinga2-repo-server-config.yml
 
 # copy the icinga2-client.repo
 - name: Copy the icinga2-client.repo file to the target host
@@ -94,14 +69,14 @@
 ##################################################################################################################################################################################
 - name: Create a logical volume of 512m for /appl/icinga.
   lvol:
-    vg: vg_icinga2
+    vg: "{{ vg_icinga2 }}"
     lv: lv_appl_icinga
     size: 512m
   when: ansible_virtualization_role == 'guest'
 
 - name: Create a logical volume of 512m for /appl/logs/icinga.
   lvol:
-    vg: vg_icinga2
+    vg: "{{ vg_icinga2 }}"
     lv: lv_appl_logs_icinga
     size: 512m
   when: ansible_virtualization_role == 'guest'
@@ -114,8 +89,8 @@
         dev: "{{ item }}"
   when: ansible_virtualization_role == 'guest'
   with_items:
-    - "/dev/vg_icinga2/lv_appl_icinga"
-    - "/dev/vg_icinga2/lv_appl_logs_icinga"
+    - "/dev/{{ vg_icinga2 }}/lv_appl_icinga"
+    - "/dev/{{ vg_icinga2 }}/lv_appl_logs_icinga"
 
 ##################################################################################################################################################################################
 # Mount the volumes 
@@ -123,7 +98,7 @@
 - name: /appl/icinga/ mountpoint
   mount:
     path: /appl/icinga
-    src:  /dev/vg_icinga2/lv_appl_icinga
+    src:  /dev/{{ vg_icinga2 }}/lv_appl_icinga
     fstype: ext4
     opts: defaults #MountOptions
     state: mounted
@@ -132,7 +107,7 @@
 - name: /appl/logs/icinga/ mountpoint
   mount:
     path: /appl/logs/icinga
-    src:  /dev/vg_icinga2/lv_appl_logs_icinga
+    src:  /dev/{{ vg_icinga2 }}/lv_appl_logs_icinga
     fstype: ext4
     opts: defaults #MountOptions
     state: mounted

@@ -1,0 +1,4 @@
+[aws]
+
+icinga2-repo-server     ansible_host="172.20.10.5"
+icinga2-test-vm         ansible_host="172.20.10.10"

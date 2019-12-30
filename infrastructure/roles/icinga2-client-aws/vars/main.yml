@@ -1,2 +1,3 @@
 ---
 # vars file for icinga2-client-aws
+vg_icinga2: "{{ vg_icinga2 }}"
