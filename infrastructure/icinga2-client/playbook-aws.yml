@@ -1,6 +1,0 @@
----
-- hosts: all
-  vars_files:
-    - roles/icinga2-client-iHSS/vars/vault
-  roles:
-  - icinga2-client-iHSS
