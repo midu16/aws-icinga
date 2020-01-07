@@ -1,0 +1,103 @@
+##################################################################################################################################################################################
+# tasks file for ansible-icinga2-client-aws
+#
+# Mihai I. 		- 2019 		e-mail: idumihai16@gmail.com
+##################################################################################################################################################################################
+
+# /repos/Packages
+# create the rpm directory on the /repos/Packages/
+- name: Create the /repos/Packages/
+  delegate_to: "{{ icinga2-repo-server }}"  
+  file:
+    path: /repos/Packages
+    state: directory
+
+# copy the rpm
+- name: Copy the rpm directory to the rpm target host
+  delegate_to: "{{ icinga2-repo-server }}"
+  copy:
+    src: "{{ role_path }}/files/rpm"
+    dest: /repos/Packages
+    owner: ec2-user
+    group: ec2-user
+    mode: '0640'
+
+# install the createrepo packet
+- name: Install the createrepo
+  delegate_to: "{{ icinga2-repo-server }}"
+  yum:
+    name: createrepo
+    state: installed
+
+# createrepo /repos/Packages/
+- name: Create local repo /repos/Packages
+  delegate_to: "{{ icinga2-repo-server }}"
+  shell: |
+    createrepo /repos/Packages/
+  args:
+    executable: /bin/bash
+
+# copy the icinga2-repo-server.repo
+- name: Copy the icinga2-client.repo file to the target host
+  delegate_to: "{{ icinga2-repo-server }}"
+  copy:
+    src: "{{ role_path }}/files/icinga2-repo-server.repo"
+    dest: /etc/yum.repos.d/icinga2-client.repo
+    owner: root
+    group: root
+    mode: '0640'
+
+# update the apt_repository
+- name: Update the icinga2-repo-server repository's databse
+  delegate_to: "{{ icinga2-repo-server }}"
+  shell:  |
+    createrepo --update /repos/Packages/
+  args:
+    executable: /bin/bash
+
+# expose the localrepository to the rest of the VMs
+- name: Install Apache
+  delagate_to: "{{ icinga2-repo-server }}"
+  yum:
+    name: "{{ packages }}"
+    state: installed
+  vars:
+# packages requires to be installed in order to expose the localhost icinga2-client necesary rpms.
+    packages:
+    - httpd
+    - vsftpd
+
+# create a symbolic link in the deafault apache root directory to our new repo.
+#It going to create the link so it points to the root of the repo directory.
+# This lessens the effort required when adding new releases to the repo.
+- name: Create an symbolic link in the default apache root directory
+  delegate_to: "{{ icinga2-repo-server }}"
+  shell:  |
+    ln -s /var/www/html/  /repos/Packages/
+  args:
+    executable: /bin/bash
+
+# restart the apache daemon to start hosting the new repo files
+- name: Restart the apache daemon to start hosting the repo files
+  delegate_to: "{{ icinga2-repo-server }}"
+  shell: |
+    systemctl restart httpd.service
+  args:
+    executable: /bin/bash
+
+- name: Create an symbolic link in the default apache root directory
+  delegate_to: "{{ icinga2-repo-server }}"
+  shell:  |
+    ln -s  /var/ftp/public/   /repos/Packages/
+  args:
+    executable: /bin/bash
+
+- name: Restart the vsftpd to start hosting the repo files
+  delegate_to:  "{{ icinga2-repo-server }}"
+  shell:  |
+    systemctl restart vsftpd.service
+  args:
+    executable: /bin/bash
+
+##################################################################################################################################################################################
+

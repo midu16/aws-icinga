@@ -1,0 +1,7 @@
+# sudo vi /etc/yum.repos.d/icinga2-client.repo
+[icinga]
+name=icinga2-client
+baseurl=file:///home/ec2-user/rpms/
+priority=1
+enabled=1
+gpgcheck=0

@@ -1,0 +1,6 @@
+---
+- hosts: all
+  vars_files:
+    - roles/icinga2-client-aws/vars/vault
+  roles:
+  - icinga2-client-aws

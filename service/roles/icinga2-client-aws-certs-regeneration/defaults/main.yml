@@ -1,0 +1,43 @@
+---
+# defaults file for icinga2-client-aws
+
+
+host_rhn: avl2045p.it.internal
+host_spacewalk: avl2603p.it.internal
+
+satellite_user: "ansible"
+satellite_password: "{{ vault_satelite_password }}"
+
+icinga_server_dir: /etc/icinga2
+icinga_server_conf_d_dir: "{{ icinga_server_dir }}/conf.d/commands/"
+
+# Change server hostname and salt settings for your configuration
+icinga2_server: avl4082t.it.internal
+icinga2_server_port: 5665
+
+icinga_server_user: icinga
+icinga_server_group: icinga
+
+# API 
+icinga2_username_test: api-infra-linux
+icinga2_password_test: "{{ vault_test_password }}" 
+
+icinga2_username_prod: api-infra-linux
+icinga2_password_prod: "{{ vault_production_password }}"
+
+icinga2_client: "{{ inventory_hostname }}"
+icinga2_client_tokenID: "{{ key }}" 
+
+# this is determined using the table below.
+icinga2_satellite: "{{ disc_sat1_out.stdout_lines[0] }}"
+# icinga2_satellite_1: "{{ disc_sat2_out.stdout_lines[0] }}"
+
+# icinga2_enpoints: [ "{{ icinga2_satellite }}", "{{ icinga2_satellite_1 }}"]
+
+# API-body
+icinga2_client_address: "{{ ansible_default_ipv4.address }}"
+icinga2_satellite_zone: "{{ disc_zone_out.stdout_lines[0] }}"
+ansible_localhost_directory: "{{ lookup('env','HOME') }}"
+
+# do not remove the certificate directory by default
+refresh_certs: false
