@@ -1,0 +1,23 @@
+/* Our local instance name. By default this is the server's hostname as returned by `hostname --fqdn`.
+    * This should be the common name from the API certificate.
+    */
+    const NodeName = "{{ icinga2_client }}"
+    /* Our local zone name. */
+    const ZoneName = "{{ icinga2_client }}"
+    object Endpoint "{{ icinga2_satellite }}" {
+    }
+    object Zone "{{ icinga2_satellite_zone }}" {
+                endpoints = {{ icinga2_endpoints | to_json }}
+    }
+    object Endpoint "{{ icinga2_client }}" {
+    }
+    object Zone "{{ icinga2_client }}" {
+                endpoints = [ "{{ icinga2_client }}" ]
+                parent = "{{ icinga2_satellite_zone }}"
+    }
+    object Zone "global-templates" {
+                global = true
+    }
+    object Zone "director-global" {
+                global = true
+}

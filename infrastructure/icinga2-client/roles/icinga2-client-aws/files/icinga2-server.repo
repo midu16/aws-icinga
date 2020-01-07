@@ -1,0 +1,5 @@
+[icinga]
+name=icinga
+baseurl=file:///localrepo/
+enabled=1
+gpgcheck=0

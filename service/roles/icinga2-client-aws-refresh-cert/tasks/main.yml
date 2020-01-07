@@ -16,17 +16,18 @@
     icinga2_username: "{{ icinga2_username_prod }}"
     icinga2_password: "{{ icinga2_password_prod }}"
   when: icinga_environment == "prod"
+
 ##################################################################################################################################################################################
-# install the binaries
+# Stopping / Enabling oss-icinga2 service
 ##################################################################################################################################################################################
-- name: Ensure packages install the icinga2-bin.x86_64, icinga2-common.x86_64 and nagios-plugins-all.x86_64
-  yum:
-    name: "{{ packages }}"
-  vars:
-    packages:
-    - icinga2-bin-2.10.5
-    - icinga2-common-2.10.5
-#    - nagios-plugins-all
+- name: enable oss-icinga2 service and ensure it is not masked
+  systemd:
+    name: oss-icinga2
+    state: stopped
+    daemon_reload: yes
+    force: yes
+    enabled: yes
+
 ##################################################################################################################################################################################
 ## Determine the type of the host
 ###################################################################################################################################################################################
@@ -58,16 +59,7 @@
     group: ansible
     mode: '0775'
     recurse: yes
-# git issue https://github.com/ansible/ansible/issues/33947 /tmp cannot be mounted with noexec
-# - name: Git clone linux_client_rollout_automation
-#   delegate_to: 127.0.0.1
-#   git:
-#     accept_hostkey: yes
-#     repo: ssh://git@bitbucket.three.com:7999/icinga/linux_client_rollout_automation.git
-#     dest: /appl/ansible/icinga2/linux_client_rollout_automation.{{ inventory_hostname }}/
-#     force: yes
-#     bare: yes
-#     # depth: 1 TODO: git version on ansible1 is too old for this
+
 - name: Clone the latest version of the bitbucket repo'
   delegate_to: 127.0.0.1
   shell: |
@@ -85,20 +77,6 @@
     recurse: yes
     state: "directory"
 
-##################################################################################################################################################################################
-# Copy / unpack files from the ansible host to target host
-##################################################################################################################################################################################
-# gtar cannot handle the archive
-# - name: Extract the basic structure oss_icinga_home.tgz and oss_icinga_baseconfig.tgz
-#   unarchive:
-#     src: "{{ item }}"
-#     dest: /tmp
-#     keep_newer: yes
-#     extra_opts:
-#       - -f
-#   with_items:
-#     - "/appl/ansible/icinga2/linux_client_rollout_automation.{{ inventory_hostname }}/oss_icinga_home.tgz"
-#     - "/appl/ansible/icinga2/linux_client_rollout_automation.{{ inventory_hostname }}/oss_icinga_baseconfig.tgz"
 - name: Copy the repository .tgz files to the target host
   copy:
     src: "{{ item }}"
@@ -157,15 +135,7 @@
      owner: root
      group: root
      mode: '0640'
-# - name: Executing script for {{ icinga_environment }} icinga_environment for zone
-#   shell: >
-#     sh /tmp/zone-discovery.sh {{ icinga_environment }}
-#   register: zone_discovery
-# - name: Setting zone relevant variables
-#   set_fact:
-#     icinga2_satellite: "{{ (zone_discovery.stdout | regex_findall('satellite1: ([^\\s]+)'))[0] }}"
-#     icinga2_satellite_zone: "{{ (zone_discovery.stdout | regex_findall('zone: ([^\\s]+)'))[0] }}"
-#     icinga2_satellite_1: "{{ (zone_discovery.stdout | regex_findall('satellite2: ([^\\s]+)')) }}"
+
 - name: Executes the scripts for {{ icinga_environment }} environment for zone
   shell: >
     sh /tmp/zone-discovery.sh {{ icinga_environment }} | awk -F'[ :]+'  '/zone: /{print $3}';
@@ -184,20 +154,11 @@
   args:
     executable: /bin/bash
   register: disc_sat2_out
-# Set in defaults/main.yml
-# - name: Setting icinga2 zone facts
-#   set_fact:
-#     icinga2_satellite_zone: "{{ disc_zone_out.stdout_lines[0] }}"
-#     icinga2_satellite: "{{ disc_sat1_out.stdout_lines[0] }}"
-#     icinga2_satellite_1: "{{ disc_sat2_out.stdout_lines[0] }}"
+
 - name: One icinga2 endpoint found
   set_fact:
     icinga2_endpoints: [ "{{ icinga2_satellite }}" ]
-  # when: icinga2_satellite_1 is undefined # FIXME it should detect if there is one or more
-# - name: Two icinga2 endpoints found
-  # set_fact:
-    # icinga2_endpoints: [ "{{ icinga2_satellite }}", "{{ icinga2_satellite_1 }}" ]
-  # when:  icinga2_satellite_1 is defined
+
 - name: Create icinga zones.conf
   template:
     src: "{{ role_path }}/templates/zones.conf.j2"
@@ -322,25 +283,6 @@
   debug:
      var: icinga2_client_tokenID.json
 
-- name: Call the POST-Deploy command of the icinga2-master-API
-  delegate_to: 127.0.0.1
-  uri:
-    url: https://{{ icinga_master_host }}/icingaweb2/director/config/deploy
-    headers:
-       Accept: "application/json"
-    user: "{{ icinga2_username }}"
-    password: "{{ icinga2_password }}"
-    method: POST
-    body_format: json
-    force_basic_auth: yes
-    use_proxy: no
-    retries: 1
-    delay: 0
-    http_agent: curl/7.29.0
-    follow_redirects: safe
-    status_code: 200, 201, 422
-  ignore_errors: yes
-
 ##################################################################################################################################################################################
 # Creating the icinga certificates
 ##################################################################################################################################################################################
@@ -348,7 +290,7 @@
   file:
     path: /appl/icinga/icinga2/var/data/certs/
     state: absent
-  when: refresh_certs == true
+
 - name: Creates directory /appl/icinga/icinga2/var/data/certs/ with icinga:icinga rights
   file:
     path: /appl/icinga/icinga2/var/data/certs/
@@ -414,7 +356,6 @@
   args:
     creates: /appl/icinga/icinga2/var/data/certs/ca.crt
     executable: /bin/bash
-  when: refresh_certs == true  
 
 ##################################################################################################################################################################################
 # Starting / Enabling oss-icinga2 service

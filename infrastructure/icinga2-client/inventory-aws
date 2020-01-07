@@ -1,0 +1,4 @@
+[inventory-aws]
+
+test-aws-vm-icinga-1      ansible_host="172.20.10.7"    icinga_environment="dev"
+test-aws-vm-icinga-2      ansible_host="172.20.10.5"    icinga_environment="dev"
